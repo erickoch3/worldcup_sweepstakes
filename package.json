@@ -19,6 +19,7 @@
     "db:migrate": "npm run db:prepare && prisma migrate dev",
     "db:deploy": "npm run db:prepare && prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:demo": "tsx scripts/seed-local-demo-data.ts",
     "sync:worldcup": "tsx scripts/sync-worldcup-data.ts",
     "verify": "npm run db:generate && npm run typecheck && npm run test && npm run build"
   },
