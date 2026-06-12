@@ -10,6 +10,7 @@ permissions:
   contents: read
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   DATABASE_URL: file:./data/ci-worldcup.db
   NEXTAUTH_URL: http://localhost:3000
   NEXTAUTH_SECRET: ci-nextauth-secret

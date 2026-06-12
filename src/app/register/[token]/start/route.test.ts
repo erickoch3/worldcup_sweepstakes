@@ -51,6 +51,7 @@ describe('registration start route', () => {
   });
 
   it('returns to the register page when a bounded invite has no remaining uses', async () => {
+    vi.stubEnv('NEXTAUTH_URL', 'https://example.com');
     inviteFindUnique.mockResolvedValue({
       expiresAt: null,
       maxUses: 1,
