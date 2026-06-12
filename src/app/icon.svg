@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img">
+  <title>Soccer ball</title>
+  <circle cx="256" cy="256" r="224" fill="#f8fbf6" stroke="#111827" stroke-width="28"/>
+  <g fill="#111827">
+    <polygon points="256 146 336 204 306 298 206 298 176 204"/>
+    <polygon points="256 52 315 86 292 146 220 146 197 86"/>
+    <polygon points="426 194 410 262 350 270 330 204 372 152"/>
+    <polygon points="86 194 140 152 182 204 162 270 102 262"/>
+    <polygon points="158 396 176 328 238 328 256 386 214 432"/>
+    <polygon points="354 396 298 432 256 386 274 328 336 328"/>
+  </g>
+  <g fill="none" stroke="#111827" stroke-linecap="round" stroke-linejoin="round" stroke-width="22">
+    <path d="M220 146 176 204"/>
+    <path d="M292 146 336 204"/>
+    <path d="M206 298 176 328"/>
+    <path d="M306 298 336 328"/>
+    <path d="M176 204 140 152"/>
+    <path d="M336 204 372 152"/>
+    <path d="M176 328 158 396"/>
+    <path d="M336 328 354 396"/>
+  </g>
+</svg>

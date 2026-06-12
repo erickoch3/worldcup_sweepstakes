@@ -1,0 +1,286 @@
+export type KnockoutStage = (typeof BRACKET_STAGE_ORDER)[number];
+
+export type KnockoutSlot = {
+  matchNumber: number;
+  stage: KnockoutStage;
+  teamASlot: string;
+  teamBSlot: string;
+  kickoffAt: string;
+  venue: string;
+};
+
+export const BRACKET_STAGE_ORDER = [
+  'Round of 32',
+  'Round of 16',
+  'Quarter-finals',
+  'Semi-finals',
+  'Third-place play-off',
+  'Final',
+] as const;
+
+// Sources checked during implementation on 2026-06-09:
+// - FIFA official match-schedule PDF:
+//   https://digitalhub.fifa.com/asset/4b5d4417-3343-4732-9cdf-14b6662af407/FWC26-Match-Schedule_English.pdf
+// - FIFA official schedule article:
+//   https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-teams-stadiums
+//
+// The FIFA wallchart lists times in Eastern Time; kickoffAt stores the equivalent UTC instant.
+// Team identities are slot placeholders until the official group and knockout results determine them.
+export const WORLD_CUP_KNOCKOUT_SLOTS: KnockoutSlot[] = [
+  {
+    matchNumber: 73,
+    stage: 'Round of 32',
+    teamASlot: 'Group A runners-up',
+    teamBSlot: 'Group B runners-up',
+    kickoffAt: '2026-06-28T19:00:00.000Z',
+    venue: 'Los Angeles Stadium',
+  },
+  {
+    matchNumber: 74,
+    stage: 'Round of 32',
+    teamASlot: 'Group E winners',
+    teamBSlot: 'Group A/B/C/D/F third place',
+    kickoffAt: '2026-06-29T20:30:00.000Z',
+    venue: 'Boston Stadium',
+  },
+  {
+    matchNumber: 75,
+    stage: 'Round of 32',
+    teamASlot: 'Group F winners',
+    teamBSlot: 'Group C runners-up',
+    kickoffAt: '2026-06-30T01:00:00.000Z',
+    venue: 'Estadio Monterrey',
+  },
+  {
+    matchNumber: 76,
+    stage: 'Round of 32',
+    teamASlot: 'Group C winners',
+    teamBSlot: 'Group F runners-up',
+    kickoffAt: '2026-06-29T17:00:00.000Z',
+    venue: 'Houston Stadium',
+  },
+  {
+    matchNumber: 77,
+    stage: 'Round of 32',
+    teamASlot: 'Group I winners',
+    teamBSlot: 'Group C/D/F/G/H third place',
+    kickoffAt: '2026-06-30T21:00:00.000Z',
+    venue: 'New York New Jersey Stadium',
+  },
+  {
+    matchNumber: 78,
+    stage: 'Round of 32',
+    teamASlot: 'Group E runners-up',
+    teamBSlot: 'Group I runners-up',
+    kickoffAt: '2026-06-30T17:00:00.000Z',
+    venue: 'Dallas Stadium',
+  },
+  {
+    matchNumber: 79,
+    stage: 'Round of 32',
+    teamASlot: 'Group A winners',
+    teamBSlot: 'Group C/E/F/H/I third place',
+    kickoffAt: '2026-07-01T01:00:00.000Z',
+    venue: 'Mexico City Stadium',
+  },
+  {
+    matchNumber: 80,
+    stage: 'Round of 32',
+    teamASlot: 'Group L winners',
+    teamBSlot: 'Group E/H/I/J/K third place',
+    kickoffAt: '2026-07-01T16:00:00.000Z',
+    venue: 'Atlanta Stadium',
+  },
+  {
+    matchNumber: 81,
+    stage: 'Round of 32',
+    teamASlot: 'Group D winners',
+    teamBSlot: 'Group B/E/F/I/J third place',
+    kickoffAt: '2026-07-02T00:00:00.000Z',
+    venue: 'San Francisco Bay Area Stadium',
+  },
+  {
+    matchNumber: 82,
+    stage: 'Round of 32',
+    teamASlot: 'Group G winners',
+    teamBSlot: 'Group A/E/H/I/J third place',
+    kickoffAt: '2026-07-01T20:00:00.000Z',
+    venue: 'Seattle Stadium',
+  },
+  {
+    matchNumber: 83,
+    stage: 'Round of 32',
+    teamASlot: 'Group K runners-up',
+    teamBSlot: 'Group L runners-up',
+    kickoffAt: '2026-07-02T23:00:00.000Z',
+    venue: 'Toronto Stadium',
+  },
+  {
+    matchNumber: 84,
+    stage: 'Round of 32',
+    teamASlot: 'Group H winners',
+    teamBSlot: 'Group J runners-up',
+    kickoffAt: '2026-07-02T19:00:00.000Z',
+    venue: 'Los Angeles Stadium',
+  },
+  {
+    matchNumber: 85,
+    stage: 'Round of 32',
+    teamASlot: 'Group B winners',
+    teamBSlot: 'Group E/F/G/I/J third place',
+    kickoffAt: '2026-07-03T03:00:00.000Z',
+    venue: 'BC Place Vancouver',
+  },
+  {
+    matchNumber: 86,
+    stage: 'Round of 32',
+    teamASlot: 'Group J winners',
+    teamBSlot: 'Group H runners-up',
+    kickoffAt: '2026-07-03T22:00:00.000Z',
+    venue: 'Miami Stadium',
+  },
+  {
+    matchNumber: 87,
+    stage: 'Round of 32',
+    teamASlot: 'Group K winners',
+    teamBSlot: 'Group D/E/I/J/L third place',
+    kickoffAt: '2026-07-04T01:30:00.000Z',
+    venue: 'Kansas City Stadium',
+  },
+  {
+    matchNumber: 88,
+    stage: 'Round of 32',
+    teamASlot: 'Group D runners-up',
+    teamBSlot: 'Group G runners-up',
+    kickoffAt: '2026-07-03T18:00:00.000Z',
+    venue: 'Dallas Stadium',
+  },
+  {
+    matchNumber: 89,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 74',
+    teamBSlot: 'Winner match 77',
+    kickoffAt: '2026-07-04T21:00:00.000Z',
+    venue: 'Philadelphia Stadium',
+  },
+  {
+    matchNumber: 90,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 73',
+    teamBSlot: 'Winner match 75',
+    kickoffAt: '2026-07-04T17:00:00.000Z',
+    venue: 'Houston Stadium',
+  },
+  {
+    matchNumber: 91,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 76',
+    teamBSlot: 'Winner match 78',
+    kickoffAt: '2026-07-05T20:00:00.000Z',
+    venue: 'New York New Jersey Stadium',
+  },
+  {
+    matchNumber: 92,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 79',
+    teamBSlot: 'Winner match 80',
+    kickoffAt: '2026-07-06T00:00:00.000Z',
+    venue: 'Mexico City Stadium',
+  },
+  {
+    matchNumber: 93,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 83',
+    teamBSlot: 'Winner match 84',
+    kickoffAt: '2026-07-06T19:00:00.000Z',
+    venue: 'Dallas Stadium',
+  },
+  {
+    matchNumber: 94,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 81',
+    teamBSlot: 'Winner match 82',
+    kickoffAt: '2026-07-07T00:00:00.000Z',
+    venue: 'Seattle Stadium',
+  },
+  {
+    matchNumber: 95,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 86',
+    teamBSlot: 'Winner match 88',
+    kickoffAt: '2026-07-07T16:00:00.000Z',
+    venue: 'Atlanta Stadium',
+  },
+  {
+    matchNumber: 96,
+    stage: 'Round of 16',
+    teamASlot: 'Winner match 85',
+    teamBSlot: 'Winner match 87',
+    kickoffAt: '2026-07-07T20:00:00.000Z',
+    venue: 'BC Place Vancouver',
+  },
+  {
+    matchNumber: 97,
+    stage: 'Quarter-finals',
+    teamASlot: 'Winner match 89',
+    teamBSlot: 'Winner match 90',
+    kickoffAt: '2026-07-09T20:00:00.000Z',
+    venue: 'Boston Stadium',
+  },
+  {
+    matchNumber: 98,
+    stage: 'Quarter-finals',
+    teamASlot: 'Winner match 93',
+    teamBSlot: 'Winner match 94',
+    kickoffAt: '2026-07-10T19:00:00.000Z',
+    venue: 'Los Angeles Stadium',
+  },
+  {
+    matchNumber: 99,
+    stage: 'Quarter-finals',
+    teamASlot: 'Winner match 91',
+    teamBSlot: 'Winner match 92',
+    kickoffAt: '2026-07-11T21:00:00.000Z',
+    venue: 'Miami Stadium',
+  },
+  {
+    matchNumber: 100,
+    stage: 'Quarter-finals',
+    teamASlot: 'Winner match 95',
+    teamBSlot: 'Winner match 96',
+    kickoffAt: '2026-07-12T01:00:00.000Z',
+    venue: 'Kansas City Stadium',
+  },
+  {
+    matchNumber: 101,
+    stage: 'Semi-finals',
+    teamASlot: 'Winner match 97',
+    teamBSlot: 'Winner match 98',
+    kickoffAt: '2026-07-14T19:00:00.000Z',
+    venue: 'Dallas Stadium',
+  },
+  {
+    matchNumber: 102,
+    stage: 'Semi-finals',
+    teamASlot: 'Winner match 99',
+    teamBSlot: 'Winner match 100',
+    kickoffAt: '2026-07-15T19:00:00.000Z',
+    venue: 'Atlanta Stadium',
+  },
+  {
+    matchNumber: 103,
+    stage: 'Third-place play-off',
+    teamASlot: 'Runner-up match 101',
+    teamBSlot: 'Runner-up match 102',
+    kickoffAt: '2026-07-18T21:00:00.000Z',
+    venue: 'Miami Stadium',
+  },
+  {
+    matchNumber: 104,
+    stage: 'Final',
+    teamASlot: 'Winner match 101',
+    teamBSlot: 'Winner match 102',
+    kickoffAt: '2026-07-19T19:00:00.000Z',
+    venue: 'New York New Jersey Stadium',
+  },
+];
