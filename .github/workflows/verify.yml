@@ -9,6 +9,14 @@ on:
 permissions:
   contents: read
 
+env:
+  DATABASE_URL: file:./data/ci-worldcup.db
+  NEXTAUTH_URL: http://localhost:3000
+  NEXTAUTH_SECRET: ci-nextauth-secret
+  GOOGLE_CLIENT_ID: ci-google-client-id
+  GOOGLE_CLIENT_SECRET: ci-google-client-secret
+  ADMIN_EMAILS: admin@example.com
+
 jobs:
   verify:
     name: Verify
