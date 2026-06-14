@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { createElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { ScheduleList, groupScheduleMatchesByDay, partitionScheduleMatches } from './schedule';
+import { ScheduleList, ScoresList, groupScheduleMatchesByDay, partitionScheduleMatches } from './schedule';
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('groupScheduleMatchesByDay', () => {
   it('groups matches by London calendar day while preserving match order', () => {
@@ -90,7 +94,7 @@ describe('partitionScheduleMatches', () => {
   });
 
   it('keeps live matches visible even after kickoff', () => {
-    const { previousMatches, upcomingMatches } = partitionScheduleMatches(
+    const { liveMatches, previousMatches, upcomingMatches } = partitionScheduleMatches(
       [
         {
           id: 'live-1',
@@ -104,8 +108,37 @@ describe('partitionScheduleMatches', () => {
       '2026-06-12T12:00:00.000Z',
     );
 
+    expect(liveMatches.map((match) => match.id)).toEqual(['live-1']);
     expect(previousMatches).toEqual([]);
-    expect(upcomingMatches.map((match) => match.id)).toEqual(['live-1']);
+    expect(upcomingMatches).toEqual([]);
+  });
+
+  it('separates live matches from upcoming matches regardless of kickoff ordering', () => {
+    const { liveMatches, previousMatches, upcomingMatches } = partitionScheduleMatches(
+      [
+        {
+          id: 'next-1',
+          kickoff: '2026-06-12T19:00:00.000Z',
+          label: 'Upcoming Match',
+          players: 'Alex vs Sam',
+          stage: 'Group B',
+          status: 'SCHEDULED',
+        },
+        {
+          id: 'live-1',
+          kickoff: '2026-06-12T11:00:00.000Z',
+          label: 'Live Match',
+          players: 'James vs Eric',
+          stage: 'Group A',
+          status: 'LIVE',
+        },
+      ],
+      '2026-06-12T12:00:00.000Z',
+    );
+
+    expect(liveMatches.map((match) => match.id)).toEqual(['live-1']);
+    expect(previousMatches).toEqual([]);
+    expect(upcomingMatches.map((match) => match.id)).toEqual(['next-1']);
   });
 });
 
@@ -142,5 +175,156 @@ describe('ScheduleList', () => {
     expect(previousMatches).toBeTruthy();
     expect(previousMatches?.hasAttribute('open')).toBe(false);
     expect(screen.getByText('Previous matches (1)')).toBeTruthy();
+  });
+
+  it('shows scores for live and final matches', () => {
+    render(
+      createElement(ScheduleList, {
+        now: '2026-06-12T12:00:00.000Z',
+        matches: [
+          {
+            id: 'live-1',
+            kickoff: '2026-06-12T11:00:00.000Z',
+            label: 'Canada vs Mexico',
+            players: 'Alex vs James',
+            stage: 'Group A',
+            status: 'LIVE',
+            teamAScore: 1,
+            teamBScore: 0,
+          },
+          {
+            id: 'final-1',
+            kickoff: '2026-06-11T19:00:00.000Z',
+            label: 'Brazil vs France',
+            players: 'Sam vs Jamie',
+            stage: 'Group B',
+            status: 'FINAL',
+            teamAScore: 2,
+            teamBScore: 2,
+            penaltySummary: 'Brazil win 5-4 on penalties',
+          },
+        ],
+      }),
+    );
+
+    expect(screen.getByText('1-0')).toBeTruthy();
+    expect(screen.getByText('2-2')).toBeTruthy();
+    expect(screen.getByText('Brazil win 5-4 on penalties')).toBeTruthy();
+  });
+
+  it('shows ongoing matches with live scores before upcoming matches', () => {
+    const { container } = render(
+      createElement(ScheduleList, {
+        now: '2026-06-12T12:00:00.000Z',
+        matches: [
+          {
+            id: 'next-1',
+            kickoff: '2026-06-12T19:00:00.000Z',
+            label: 'Brazil vs Germany',
+            players: 'Sam vs Jamie',
+            stage: 'Group B',
+            status: 'SCHEDULED',
+          },
+          {
+            id: 'live-1',
+            kickoff: '2026-06-12T11:00:00.000Z',
+            label: 'Canada vs Mexico',
+            players: 'Alex vs James',
+            stage: 'Group A',
+            status: 'LIVE',
+            teamAScore: 1,
+            teamBScore: 0,
+          },
+        ],
+      }),
+    );
+
+    const pageText = container.textContent ?? '';
+
+    expect(screen.getByRole('heading', { name: 'Ongoing matches' })).toBeTruthy();
+    expect(screen.getByText('1-0')).toBeTruthy();
+    expect(pageText.indexOf('Canada vs Mexico')).toBeLessThan(pageText.indexOf('Brazil vs Germany'));
+  });
+});
+
+describe('ScoresList', () => {
+  it('lists completed matches with winner and score details', () => {
+    render(
+      createElement(ScoresList, {
+        matches: [
+          {
+            id: 'final-1',
+            kickoff: '2026-06-11T19:00:00.000Z',
+            label: 'Brazil vs France',
+            players: 'Sam vs Jamie',
+            stage: 'Final',
+            status: 'FINAL',
+            teamAScore: 2,
+            teamBScore: 1,
+            winnerName: 'Brazil',
+          },
+          {
+            id: 'final-2',
+            kickoff: '2026-06-10T19:00:00.000Z',
+            label: 'Canada vs Mexico',
+            players: 'Alex vs James',
+            stage: 'Group A',
+            status: 'FINAL',
+            teamAScore: 1,
+            teamBScore: 1,
+            penaltySummary: 'Canada win 4-3 on penalties',
+            winnerName: 'Canada',
+          },
+        ],
+      }),
+    );
+
+    expect(screen.getByRole('heading', { name: 'Scores' })).toBeTruthy();
+    expect(screen.getByText('Brazil vs France')).toBeTruthy();
+    expect(screen.getByText('Brazil won')).toBeTruthy();
+    expect(screen.getByText('2-1')).toBeTruthy();
+    expect(screen.getByText('Canada win 4-3 on penalties')).toBeTruthy();
+  });
+
+  it('shows live matches as live results before completed matches', () => {
+    const { container } = render(
+      createElement(ScoresList, {
+        matches: [
+          {
+            id: 'live-1',
+            kickoff: '2026-06-12T19:00:00.000Z',
+            label: 'Canada vs Mexico',
+            players: 'Alex vs James',
+            stage: 'Group A',
+            status: 'LIVE',
+            teamAScore: 1,
+            teamBScore: 0,
+          },
+          {
+            id: 'final-1',
+            kickoff: '2026-06-11T19:00:00.000Z',
+            label: 'Brazil vs France',
+            players: 'Sam vs Jamie',
+            stage: 'Final',
+            status: 'FINAL',
+            teamAScore: 2,
+            teamBScore: 1,
+            winnerName: 'Brazil',
+          },
+        ],
+      }),
+    );
+
+    const pageText = container.textContent ?? '';
+
+    expect(screen.getByText('1-0')).toBeTruthy();
+    expect(screen.getByText('Live')).toBeTruthy();
+    expect(pageText.indexOf('Canada vs Mexico')).toBeLessThan(pageText.indexOf('Brazil vs France'));
+  });
+
+  it('shows an empty state when no completed games exist', () => {
+    render(createElement(ScoresList, { matches: [] }));
+
+    expect(screen.getByText('No completed games yet.')).toBeTruthy();
   });
 });

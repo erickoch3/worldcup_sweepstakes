@@ -1,7 +1,7 @@
 import { MatchStatus } from '@prisma/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getScheduleData } from './schedule';
+import { getScheduleData, getScoresData } from './schedule';
 
 const { assignmentFindMany, matchFindMany, draftFindFirst } = vi.hoisted(() => ({
   draftFindFirst: vi.fn(),
@@ -76,5 +76,42 @@ describe('getScheduleData', () => {
     expect(matchFindMany).toHaveBeenCalled();
     expect(assignmentFindMany).not.toHaveBeenCalled();
     expect(data.teamPlayerMap).toEqual({});
+  });
+});
+
+describe('getScoresData', () => {
+  beforeEach(() => {
+    assignmentFindMany.mockReset();
+    matchFindMany.mockReset();
+    draftFindFirst.mockReset();
+  });
+
+  it('returns live and final matches with live games first', async () => {
+    draftFindFirst.mockResolvedValue(null);
+    matchFindMany.mockResolvedValue([
+      {
+        id: 'older-final',
+        status: MatchStatus.FINAL,
+        kickoffAt: new Date('2026-06-11T20:00:00.000Z'),
+      },
+      {
+        id: 'live-match',
+        status: MatchStatus.LIVE,
+        kickoffAt: new Date('2026-06-12T20:00:00.000Z'),
+      },
+    ]);
+
+    const data = await getScoresData();
+
+    expect(matchFindMany).toHaveBeenCalledWith({
+      where: { status: { in: [MatchStatus.LIVE, MatchStatus.FINAL] } },
+      orderBy: { kickoffAt: 'desc' },
+      include: {
+        teamA: true,
+        teamB: true,
+        winnerTeam: true,
+      },
+    });
+    expect(data.matches.map((match) => match.id)).toEqual(['live-match', 'older-final']);
   });
 });

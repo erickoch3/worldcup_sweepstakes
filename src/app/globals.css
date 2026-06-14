@@ -899,6 +899,12 @@ button {
     var(--success-bg);
 }
 
+.schedule-row.live-match {
+  background:
+    linear-gradient(90deg, rgb(15 118 110 / 0.16), transparent 42%),
+    #f3fbf7;
+}
+
 .schedule-main {
   min-width: 0;
   display: grid;
@@ -919,6 +925,12 @@ button {
   color: var(--navy);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.match-result-note {
+  color: var(--accent-strong);
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 .schedule-status {
@@ -948,6 +960,95 @@ button {
   border-color: var(--accent);
   background: var(--accent);
   color: #ffffff;
+}
+
+.live-pill {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.score-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 4px 9px;
+  background: #ffffff;
+  color: var(--navy);
+  font-size: 0.95rem;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.scores-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 14px;
+  list-style: none;
+  background:
+    linear-gradient(180deg, rgb(15 118 110 / 0.055), transparent 220px),
+    var(--panel-tint);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  padding: 12px 14px;
+  background: #ffffff;
+}
+
+.score-row.live-score-row {
+  background:
+    linear-gradient(90deg, rgb(15 118 110 / 0.12), transparent 42%),
+    #ffffff;
+}
+
+.score-row:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.score-row:last-child {
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 8px 8px;
+}
+
+.score-row:only-child {
+  border-radius: 8px;
+}
+
+.score-main {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.score-result {
+  min-width: 92px;
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  text-align: right;
+}
+
+.score-result strong {
+  color: var(--navy);
+  font-size: 1.28rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.score-result span {
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  font-weight: 850;
 }
 
 .bracket-grid {
@@ -1491,11 +1592,25 @@ button {
   }
 
   .schedule-row {
+    align-items: flex-start;
     padding: 11px 12px;
   }
 
   .schedule-status {
     width: 100%;
+  }
+
+  .score-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 11px 12px;
+  }
+
+  .score-result {
+    min-width: 0;
+    justify-items: start;
+    text-align: left;
   }
 
   .mini-match-card {

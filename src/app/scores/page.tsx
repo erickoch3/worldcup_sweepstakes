@@ -1,17 +1,17 @@
-import { ScheduleList } from '@/components/schedule';
 import { AuthGate } from '@/components/auth-gate';
+import { ScoresList } from '@/components/schedule';
 import { getCurrentSession } from '@/auth/session';
-import { getScheduleData } from '@/server/queries/schedule';
+import { getScoresData } from '@/server/queries/schedule';
 import { formatPlayerLabelForTeam } from '@/server/queries/team-owners';
 
-export default async function SchedulePage() {
+export default async function ScoresPage() {
   const session = await getCurrentSession();
 
   if (!session?.user.email) {
-    return <AuthGate callbackUrl="/schedule" />;
+    return <AuthGate callbackUrl="/scores" />;
   }
 
-  const data = await getScheduleData();
+  const data = await getScoresData();
   const matches = data.matches.map((match) => ({
     id: match.id,
     label: `${match.teamA.displayName} vs ${match.teamB.displayName}`,
@@ -38,7 +38,7 @@ export default async function SchedulePage() {
 
   return (
     <main className="page-shell page-stack">
-      <ScheduleList matches={matches} nextMatchId={data.nextMatchId} />
+      <ScoresList matches={matches} />
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CalendarDays, GitBranch, LayoutDashboard, Settings, Trophy, User } from 'lucide-react';
+import { CalendarDays, GitBranch, LayoutDashboard, Medal, Settings, Trophy, User } from 'lucide-react';
 
 import { getCurrentSession } from '@/auth/session';
 
@@ -9,6 +9,7 @@ export async function Nav() {
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/bracket', label: 'Bracket', icon: GitBranch },
     { href: '/schedule', label: 'Schedule', icon: CalendarDays },
+    { href: '/scores', label: 'Scores', icon: Medal },
     session?.user
       ? { href: '/account', label: 'Account', icon: User }
       : { href: '/login', label: 'Sign in', icon: User },
