@@ -10,8 +10,6 @@ async function main() {
         displayName: team.displayName,
         groupName: team.groupName,
         bracketSeed: team.bracketSeed,
-        decimalOdds: team.decimalOdds,
-        active: team.active,
       },
       create: team,
     });

@@ -87,4 +87,49 @@ describe('getBracketData', () => {
     expect(final?.teamA).toMatchObject({ name: 'Brazil', score: 2 });
     expect(final?.teamB).toMatchObject({ name: 'France', score: 1 });
   });
+
+  it('resolves future bracket slots from completed earlier match winners', async () => {
+    draftFindFirst.mockResolvedValue(null);
+    assignmentFindMany.mockResolvedValue([]);
+    matchFindMany.mockResolvedValue([
+      {
+        id: 'db-match-73',
+        matchNumber: 73,
+        stage: 'Round of 32',
+        status: 'FINAL',
+        teamAScore: 0,
+        teamBScore: 1,
+        kickoffAt: new Date('2026-06-28T19:00:00.000Z'),
+        teamAId: 'team-rsa',
+        teamBId: 'team-canada',
+        teamA: { id: 'team-rsa', countryCode: 'RSA', displayName: 'South Africa' },
+        teamB: { id: 'team-canada', countryCode: 'CAN', displayName: 'Canada' },
+        winnerTeam: { id: 'team-canada', countryCode: 'CAN', displayName: 'Canada' },
+      },
+      {
+        id: 'db-match-75',
+        matchNumber: 75,
+        stage: 'Round of 32',
+        status: 'LIVE',
+        teamAScore: 0,
+        teamBScore: 0,
+        kickoffAt: new Date('2026-06-30T01:00:00.000Z'),
+        teamAId: 'team-ned',
+        teamBId: 'team-mar',
+        teamA: { id: 'team-ned', countryCode: 'NED', displayName: 'Netherlands' },
+        teamB: { id: 'team-mar', countryCode: 'MAR', displayName: 'Morocco' },
+        winnerTeam: null,
+      },
+    ]);
+
+    const groups = await getBracketData();
+    const roundOf16 = groups.find((group) => group.stage === 'Round of 16');
+    const match90 = roundOf16?.matches.find((match) => match.id === 'match-90');
+
+    expect(match90).toMatchObject({
+      label: 'Match 90',
+      teamA: { name: 'Canada', countryCode: 'CAN' },
+      teamB: { name: 'TBD', description: 'Winner match 75' },
+    });
+  });
 });

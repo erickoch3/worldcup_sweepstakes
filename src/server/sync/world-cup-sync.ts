@@ -1,5 +1,6 @@
 import { MatchStatus } from '@prisma/client';
 
+import { WORLD_CUP_KNOCKOUT_SLOTS } from '../../data/world-cup-knockout';
 import { prisma } from '../../lib/prisma';
 import { fetchApiFootballFixtures } from './api-football';
 import { fetchOddsApiOutrights, summarizeBestTeamOdds, type TeamOddsSnapshotInput } from './odds-api';
@@ -20,6 +21,10 @@ type MatchRecord = {
   teamBId: string;
   kickoffAt: Date;
 };
+
+const KNOCKOUT_KICKOFF_BY_MATCH_NUMBER = new Map(
+  WORLD_CUP_KNOCKOUT_SLOTS.map((slot) => [slot.matchNumber, new Date(slot.kickoffAt)]),
+);
 
 type TeamOddsSyncClient = {
   team: {
@@ -76,9 +81,11 @@ export async function applyTeamOddsSync(
   snapshots: TeamOddsSnapshotInput[],
   sampledAt: Date,
 ): Promise<{ appliedSnapshots: number; updatedTeams: number }> {
-  const countryCodes = [...new Set(snapshots.map((snapshot) => snapshot.countryCode))];
+  if (snapshots.length === 0) {
+    return { appliedSnapshots: 0, updatedTeams: 0 };
+  }
+
   const teams = await client.team.findMany({
-    where: { countryCode: { in: countryCodes } },
     select: { id: true, countryCode: true },
   });
   const teamsByCountryCode = new Map(teams.map((team) => [team.countryCode, team]));
@@ -129,6 +136,7 @@ export async function applyTeamOddsSync(
   }
 
   let updatedTeams = 0;
+  const teamsWithCurrentOdds = new Set<string>();
   for (const summary of summarizeBestTeamOdds(snapshots)) {
     const team = teamsByCountryCode.get(summary.countryCode);
 
@@ -136,14 +144,31 @@ export async function applyTeamOddsSync(
       continue;
     }
 
+    teamsWithCurrentOdds.add(team.countryCode);
     await client.team.update({
       where: { id: team.id },
       data: {
+        active: true,
         decimalOdds: summary.decimalOdds,
         oddsUpdatedAt: sampledAt,
       },
     });
     updatedTeams += 1;
+  }
+
+  if (teamsWithCurrentOdds.size > 0) {
+    for (const team of teams) {
+      if (teamsWithCurrentOdds.has(team.countryCode)) {
+        continue;
+      }
+
+      await client.team.update({
+        where: { id: team.id },
+        data: {
+          active: false,
+        },
+      });
+    }
   }
 
   return { appliedSnapshots, updatedTeams };
@@ -201,7 +226,7 @@ export async function applyMatchSync(
 
     const winnerTeamId = match.winnerTeamCode === null ? null : teamsByCountryCode.get(match.winnerTeamCode)?.id ?? null;
     const existingMatch = findExistingMatch(existingMatches, match, teamA.id, teamB.id);
-    const kickoffAt = match.kickoffAt ?? existingMatch?.kickoffAt;
+    const kickoffAt = match.kickoffAt ?? existingMatch?.kickoffAt ?? fallbackKickoffAt(match.matchNumber);
 
     if (kickoffAt === undefined) {
       skippedMatches += 1;
@@ -213,6 +238,7 @@ export async function applyMatchSync(
         data: {
           resultProvider: match.provider,
           resultProviderFixtureId: match.providerFixtureId,
+          matchNumber: match.matchNumber,
           teamAId: teamA.id,
           teamBId: teamB.id,
           kickoffAt,
@@ -221,6 +247,7 @@ export async function applyMatchSync(
           teamAScore: match.teamAScore,
           teamBScore: match.teamBScore,
           winnerTeamId,
+          penaltySummary: match.penaltySummary ?? null,
           resultSyncedAt: syncedAt,
         },
       });
@@ -234,12 +261,14 @@ export async function applyMatchSync(
       data: {
         resultProvider: match.provider,
         resultProviderFixtureId: match.providerFixtureId,
+        matchNumber: match.matchNumber ?? existingMatch.matchNumber,
         kickoffAt,
         stage: match.stage,
         status: match.status,
         teamAScore: isReversed ? match.teamBScore : match.teamAScore,
         teamBScore: isReversed ? match.teamAScore : match.teamBScore,
         winnerTeamId,
+        penaltySummary: match.penaltySummary ?? null,
         resultSyncedAt: syncedAt,
       },
     });
@@ -247,6 +276,10 @@ export async function applyMatchSync(
   }
 
   return { createdMatches, updatedMatches, skippedMatches };
+}
+
+function fallbackKickoffAt(matchNumber: number | null): Date | undefined {
+  return matchNumber === null ? undefined : KNOCKOUT_KICKOFF_BY_MATCH_NUMBER.get(matchNumber);
 }
 
 export async function runWorldCupDataSync({

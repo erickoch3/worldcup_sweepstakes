@@ -107,6 +107,7 @@ describe('applyTeamOddsSync', () => {
     expect(teamUpdate).toHaveBeenCalledWith({
       where: { id: 'team-spain' },
       data: {
+        active: true,
         decimalOdds: 6,
         oddsUpdatedAt: sampledAt,
       },
@@ -114,8 +115,57 @@ describe('applyTeamOddsSync', () => {
     expect(teamUpdate).toHaveBeenCalledWith({
       where: { id: 'team-france' },
       data: {
+        active: true,
         decimalOdds: 4,
         oddsUpdatedAt: sampledAt,
+      },
+    });
+  });
+
+  it('marks teams missing from the latest outright odds as inactive', async () => {
+    const sampledAt = new Date('2026-06-18T12:00:00.000Z');
+    teamFindMany.mockResolvedValue([
+      { id: 'team-spain', countryCode: 'ESP' },
+      { id: 'team-germany', countryCode: 'GER' },
+    ]);
+
+    const result = await applyTeamOddsSync(
+      {
+        team: { findMany: teamFindMany, update: teamUpdate },
+        teamOddsSnapshot: { upsert: snapshotUpsert },
+      },
+      [
+        {
+          provider: 'the-odds-api',
+          sourceEventId: 'event-1',
+          sourceSportKey: 'soccer_fifa_world_cup_winner',
+          sourceLastUpdate: new Date('2026-06-18T11:55:00.000Z'),
+          sampledAt,
+          bookmakerKey: 'a',
+          bookmakerTitle: 'A',
+          marketKey: 'outrights',
+          outcomeName: 'Spain',
+          countryCode: 'ESP',
+          decimalOdds: 5,
+          impliedProbability: 0.2,
+        },
+      ],
+      sampledAt,
+    );
+
+    expect(result).toEqual({ appliedSnapshots: 1, updatedTeams: 1 });
+    expect(teamUpdate).toHaveBeenCalledWith({
+      where: { id: 'team-spain' },
+      data: {
+        active: true,
+        decimalOdds: 5,
+        oddsUpdatedAt: sampledAt,
+      },
+    });
+    expect(teamUpdate).toHaveBeenCalledWith({
+      where: { id: 'team-germany' },
+      data: {
+        active: false,
       },
     });
   });
@@ -182,12 +232,14 @@ describe('applyMatchSync', () => {
       data: {
         resultProvider: 'api-football',
         resultProviderFixtureId: '1001',
+        matchNumber: null,
         kickoffAt,
         stage: 'Group A - 1',
         status: MatchStatus.FINAL,
         teamAScore: 2,
         teamBScore: 1,
         winnerTeamId: 'team-mexico',
+        penaltySummary: null,
         resultSyncedAt: syncedAt,
       },
     });
@@ -277,6 +329,7 @@ describe('applyMatchSync', () => {
       data: {
         resultProvider: 'api-football',
         resultProviderFixtureId: '2001',
+        matchNumber: null,
         teamAId: 'team-rsa',
         teamBId: 'team-mexico',
         kickoffAt,
@@ -285,8 +338,51 @@ describe('applyMatchSync', () => {
         teamAScore: null,
         teamBScore: null,
         winnerTeamId: null,
+        penaltySummary: null,
         resultSyncedAt: syncedAt,
       },
+    });
+  });
+
+  it('creates discovered knockout fixtures using official slot kickoff times when the provider omits kickoff', async () => {
+    const syncedAt = new Date('2026-06-30T01:00:00.000Z');
+    matchFindMany.mockResolvedValue([]);
+    teamFindMany.mockResolvedValue([
+      { id: 'team-brazil', countryCode: 'BRA' },
+      { id: 'team-japan', countryCode: 'JPN' },
+    ]);
+
+    const result = await applyMatchSync(
+      {
+        team: { findMany: teamFindMany },
+        match: { create: matchCreate, findMany: matchFindMany, update: matchUpdate },
+      },
+      [
+        {
+          provider: 'worldcup26',
+          providerFixtureId: '76',
+          matchNumber: 76,
+          teamACode: 'BRA',
+          teamBCode: 'JPN',
+          kickoffAt: null,
+          stage: 'Round of 32',
+          status: MatchStatus.FINAL,
+          teamAScore: 2,
+          teamBScore: 1,
+          winnerTeamCode: 'BRA',
+        },
+      ],
+      syncedAt,
+    );
+
+    expect(result).toEqual({ createdMatches: 1, updatedMatches: 0, skippedMatches: 0 });
+    expect(matchCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        matchNumber: 76,
+        kickoffAt: new Date('2026-06-29T17:00:00.000Z'),
+        stage: 'Round of 32',
+        winnerTeamId: 'team-brazil',
+      }),
     });
   });
 });

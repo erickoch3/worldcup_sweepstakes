@@ -22,6 +22,7 @@ const NAME_ALIASES: Record<string, string> = {
   colombia: 'COL',
   'congo dr': 'COD',
   'congo d r': 'COD',
+  'democratic republic of the congo': 'COD',
   'dr congo': 'COD',
   croatia: 'CRO',
   curacao: 'CUW',

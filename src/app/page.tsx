@@ -1,13 +1,11 @@
-import { BracketView } from '@/components/bracket';
 import { AuthGate } from '@/components/auth-gate';
 import { TeamNameWithFlag } from '@/components/country-flag';
 import { Leaderboard } from '@/components/leaderboard';
 import { getCurrentSession } from '@/auth/session';
 import { formatPounds } from '@/server/format';
-import { getBracketData } from '@/server/queries/bracket';
 import { getDashboardData } from '@/server/queries/dashboard';
 import { getScheduleData } from '@/server/queries/schedule';
-import { formatPlayerLabelForTeam } from '@/server/queries/team-owners';
+import { selectDashboardMatches } from './dashboard-matches';
 
 export default async function HomePage() {
   const session = await getCurrentSession();
@@ -16,9 +14,8 @@ export default async function HomePage() {
     return <AuthGate callbackUrl="/" />;
   }
 
-  const [data, bracketGroups, scheduleData] = await Promise.all([
+  const [data, scheduleData] = await Promise.all([
     getDashboardData(),
-    getBracketData(),
     getScheduleData(),
   ]);
   const rows = data.leaderboard.map((row, index) => ({
@@ -30,27 +27,9 @@ export default async function HomePage() {
     })),
     points: row.points,
     normalizedWinProbability: row.normalizedWinProbability,
+    isEliminated: row.isEliminated,
   }));
-  const upcomingMatches = scheduleData.matches
-    .filter((match) => match.status === 'SCHEDULED' && match.kickoffAt >= new Date())
-    .slice(0, 5)
-    .map((match) => ({
-      id: match.id,
-      teamA: {
-        countryCode: match.teamA.countryCode,
-        name: match.teamA.displayName,
-      },
-      teamB: {
-        countryCode: match.teamB.countryCode,
-        name: match.teamB.displayName,
-      },
-      kickoff: match.kickoffAt,
-      players: `${formatPlayerLabelForTeam(match.teamAId, scheduleData.teamPlayerMap)} vs ${formatPlayerLabelForTeam(
-        match.teamBId,
-        scheduleData.teamPlayerMap,
-      )}`,
-      stage: match.stage,
-    }));
+  const dashboardMatches = selectDashboardMatches(scheduleData.matches, scheduleData.teamPlayerMap);
   const oddsGroups = groupTeamsByGroup(data.activeTeams);
   const favoriteTeams = [...data.activeTeams].sort(compareTeamOdds).slice(0, 6);
 
@@ -87,11 +66,11 @@ export default async function HomePage() {
       <section className="dashboard-grid" aria-label="World Cup dashboard">
         <section className="panel dashboard-panel next-panel" aria-labelledby="next-heading">
           <div className="panel-heading">
-            <h2 id="next-heading">Next Matches</h2>
+            <h2 id="next-heading">Current Matches</h2>
           </div>
           <div className="match-card-list">
-            {upcomingMatches.map((match) => (
-              <article className="mini-match-card" key={match.id}>
+            {dashboardMatches.map((match) => (
+              <article className={match.isLive ? 'mini-match-card live-mini-match-card' : 'mini-match-card'} key={match.id}>
                 <div>
                   <strong>
                     <TeamNameWithFlag countryCode={match.teamA.countryCode} name={match.teamA.name} /> vs{' '}
@@ -100,7 +79,10 @@ export default async function HomePage() {
                   <span>{match.players}</span>
                 </div>
                 <time dateTime={match.kickoff.toISOString()}>{formatDashboardKickoff(match.kickoff)}</time>
-                <em>{match.stage}</em>
+                <span className="mini-match-result">
+                  {match.score ? <b>{match.score}</b> : null}
+                  <em>{match.statusLabel}</em>
+                </span>
               </article>
             ))}
           </div>
@@ -151,7 +133,6 @@ export default async function HomePage() {
       </section>
 
       <Leaderboard rows={rows} />
-      <BracketView groups={bracketGroups} />
     </main>
   );
 }

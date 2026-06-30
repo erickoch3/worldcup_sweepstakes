@@ -12,4 +12,5 @@ export type SyncedMatch = {
   teamAScore: number | null;
   teamBScore: number | null;
   winnerTeamCode: string | null;
+  penaltySummary?: string | null;
 };

@@ -38,6 +38,8 @@ export function parseWorldCup26Games(payload: unknown): SyncedMatch[] {
 
     const teamAScore = optionalScore(game.home_score);
     const teamBScore = optionalScore(game.away_score);
+    const teamAPenaltyScore = optionalScore(game.home_penalty_score);
+    const teamBPenaltyScore = optionalScore(game.away_penalty_score);
     const status = mapWorldCup26Status(game.finished, game.time_elapsed);
 
     return [
@@ -51,7 +53,22 @@ export function parseWorldCup26Games(payload: unknown): SyncedMatch[] {
         teamBCode,
         teamAScore,
         teamBScore,
-        winnerTeamCode: winnerCode({ status, teamACode, teamBCode, teamAScore, teamBScore }),
+        winnerTeamCode: winnerCode({
+          status,
+          teamACode,
+          teamBCode,
+          teamAScore,
+          teamBScore,
+          teamAPenaltyScore,
+          teamBPenaltyScore,
+        }),
+        penaltySummary: penaltySummary({
+          status,
+          teamAName: optionalString(game.home_team_name_en),
+          teamBName: optionalString(game.away_team_name_en),
+          teamAScore: teamAPenaltyScore,
+          teamBScore: teamBPenaltyScore,
+        }),
         kickoffAt: null,
       },
     ];
@@ -63,6 +80,8 @@ function assertWorldCup26GamesResponse(payload: unknown): asserts payload is {
     id?: unknown;
     home_score?: unknown;
     away_score?: unknown;
+    home_penalty_score?: unknown;
+    away_penalty_score?: unknown;
     group?: unknown;
     finished?: unknown;
     time_elapsed?: unknown;
@@ -90,7 +109,32 @@ function stageFromGame(game: { group?: unknown; type?: unknown }): string {
     return `Group ${group}`;
   }
 
+  const knockoutStage = knockoutStageFromType(type);
+
+  if (knockoutStage !== null) {
+    return knockoutStage;
+  }
+
   return titleCase(type);
+}
+
+function knockoutStageFromType(type: string): string | null {
+  switch (type) {
+    case 'r32':
+      return 'Round of 32';
+    case 'r16':
+      return 'Round of 16';
+    case 'qf':
+      return 'Quarter-finals';
+    case 'sf':
+      return 'Semi-finals';
+    case 'third':
+      return 'Third-place play-off';
+    case 'final':
+      return 'Final';
+    default:
+      return null;
+  }
 }
 
 function mapWorldCup26Status(finished: unknown, timeElapsed: unknown): MatchStatus {
@@ -114,18 +158,61 @@ function winnerCode({
   teamBCode,
   teamAScore,
   teamBScore,
+  teamAPenaltyScore,
+  teamBPenaltyScore,
 }: {
   status: MatchStatus;
   teamACode: string;
   teamBCode: string;
   teamAScore: number | null;
   teamBScore: number | null;
+  teamAPenaltyScore: number | null;
+  teamBPenaltyScore: number | null;
 }): string | null {
-  if (status !== MatchStatus.FINAL || teamAScore === null || teamBScore === null || teamAScore === teamBScore) {
+  if (status !== MatchStatus.FINAL || teamAScore === null || teamBScore === null) {
     return null;
   }
 
-  return teamAScore > teamBScore ? teamACode : teamBCode;
+  if (teamAScore !== teamBScore) {
+    return teamAScore > teamBScore ? teamACode : teamBCode;
+  }
+
+  if (teamAPenaltyScore === null || teamBPenaltyScore === null || teamAPenaltyScore === teamBPenaltyScore) {
+    return null;
+  }
+
+  return teamAPenaltyScore > teamBPenaltyScore ? teamACode : teamBCode;
+}
+
+function penaltySummary({
+  status,
+  teamAName,
+  teamBName,
+  teamAScore,
+  teamBScore,
+}: {
+  status: MatchStatus;
+  teamAName: string | null;
+  teamBName: string | null;
+  teamAScore: number | null;
+  teamBScore: number | null;
+}): string | null {
+  if (
+    status !== MatchStatus.FINAL ||
+    teamAName === null ||
+    teamBName === null ||
+    teamAScore === null ||
+    teamBScore === null ||
+    teamAScore === teamBScore
+  ) {
+    return null;
+  }
+
+  const winnerName = teamAScore > teamBScore ? teamAName : teamBName;
+  const winnerScore = Math.max(teamAScore, teamBScore);
+  const loserScore = Math.min(teamAScore, teamBScore);
+
+  return `${winnerName} win ${winnerScore}-${loserScore} on penalties`;
 }
 
 function optionalPositiveInteger(value: unknown): number | null {

@@ -12,29 +12,41 @@ export default async function SchedulePage() {
   }
 
   const data = await getScheduleData();
-  const matches = data.matches.map((match) => ({
-    id: match.id,
-    label: `${match.teamA.displayName} vs ${match.teamB.displayName}`,
-    kickoff: match.kickoffAt,
-    stage: match.stage,
-    status: match.status,
-    teamAScore: match.teamAScore,
-    teamBScore: match.teamBScore,
-    penaltySummary: match.penaltySummary,
-    winnerName: match.winnerTeam?.displayName,
-    players: `${formatPlayerLabelForTeam(match.teamAId, data.teamPlayerMap)} vs ${formatPlayerLabelForTeam(
-      match.teamBId,
-      data.teamPlayerMap,
-    )}`,
-    teamA: {
-      countryCode: match.teamA.countryCode,
-      name: match.teamA.displayName,
-    },
-    teamB: {
-      countryCode: match.teamB.countryCode,
-      name: match.teamB.displayName,
-    },
-  }));
+  const matches = data.matches.map((match) => {
+    const hasTeams = match.teamA !== null && match.teamB !== null && match.teamAId !== null && match.teamBId !== null;
+    const teamASlot = 'teamASlot' in match ? match.teamASlot : 'TBD';
+    const teamBSlot = 'teamBSlot' in match ? match.teamBSlot : 'TBD';
+
+    return {
+      id: match.id,
+      label: hasTeams ? `${match.teamA.displayName} vs ${match.teamB.displayName}` : `${teamASlot} vs ${teamBSlot}`,
+      kickoff: match.kickoffAt,
+      stage: match.stage,
+      status: match.status,
+      teamAScore: match.teamAScore,
+      teamBScore: match.teamBScore,
+      penaltySummary: match.penaltySummary,
+      winnerName: match.winnerTeam?.displayName,
+      players: hasTeams
+        ? `${formatPlayerLabelForTeam(match.teamAId, data.teamPlayerMap)} vs ${formatPlayerLabelForTeam(
+            match.teamBId,
+            data.teamPlayerMap,
+          )}`
+        : `${teamASlot} vs ${teamBSlot}`,
+      teamA: hasTeams
+        ? {
+            countryCode: match.teamA.countryCode,
+            name: match.teamA.displayName,
+          }
+        : undefined,
+      teamB: hasTeams
+        ? {
+            countryCode: match.teamB.countryCode,
+            name: match.teamB.displayName,
+          }
+        : undefined,
+    };
+  });
 
   return (
     <main className="page-shell page-stack">

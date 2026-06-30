@@ -33,6 +33,7 @@ describe('parseWorldCup26Games', () => {
         teamAScore: 2,
         teamBScore: 0,
         winnerTeamCode: 'MEX',
+        penaltySummary: null,
         kickoffAt: null,
       },
     ]);
@@ -67,5 +68,51 @@ describe('parseWorldCup26Games', () => {
       teamBScore: 1,
       winnerTeamCode: null,
     });
+  });
+
+  it('normalizes knockout stage labels, penalty winners, and knockout team aliases', () => {
+    const matches = parseWorldCup26Games({
+      games: [
+        {
+          id: '74',
+          home_score: '1',
+          away_score: '1',
+          home_penalty_score: '3',
+          away_penalty_score: '4',
+          group: 'R32',
+          finished: 'TRUE',
+          time_elapsed: 'finished',
+          type: 'r32',
+          home_team_name_en: 'Germany',
+          away_team_name_en: 'Paraguay',
+        },
+        {
+          id: '80',
+          home_score: '0',
+          away_score: '0',
+          group: 'R32',
+          finished: 'FALSE',
+          time_elapsed: 'notstarted',
+          type: 'r32',
+          home_team_name_en: 'England',
+          away_team_name_en: 'Democratic Republic of the Congo',
+        },
+      ],
+    });
+
+    expect(matches).toEqual([
+      expect.objectContaining({
+        matchNumber: 74,
+        stage: 'Round of 32',
+        winnerTeamCode: 'PAR',
+        penaltySummary: 'Paraguay win 4-3 on penalties',
+      }),
+      expect.objectContaining({
+        matchNumber: 80,
+        stage: 'Round of 32',
+        teamACode: 'ENG',
+        teamBCode: 'COD',
+      }),
+    ]);
   });
 });

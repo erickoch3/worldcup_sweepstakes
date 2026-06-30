@@ -176,7 +176,7 @@ function buildPlayerLeaderboard<
     teamShareCount: number;
     teamShareIndex: number;
     userId: string;
-    team: { id: string; countryCode: string; displayName: string };
+    team: { id: string; active: boolean; countryCode: string; displayName: string };
     user: { id: string; email: string | null; name: string | null };
   },
 >(
@@ -201,6 +201,7 @@ function buildPlayerLeaderboard<
       buyInPence: number;
       goalsFor: number;
       goalDifference: number;
+      activeTeamCount: number;
       normalizedWinProbability: number;
       points: number;
       teams: Array<{
@@ -224,6 +225,7 @@ function buildPlayerLeaderboard<
         buyInPence: 0,
         goalsFor: 0,
         goalDifference: 0,
+        activeTeamCount: 0,
         normalizedWinProbability: 0,
         points: 0,
         teams: [],
@@ -233,8 +235,10 @@ function buildPlayerLeaderboard<
     const standingWeight = 1 / shareCount;
 
     row.buyInPence += assignment.buyInPence;
+    row.activeTeamCount += assignment.team.active ? 1 : 0;
     row.normalizedWinProbability = roundScore(
-      row.normalizedWinProbability + currentAssignmentWinProbability(assignment, currentTeamWinProbabilityById),
+      row.normalizedWinProbability +
+        (assignment.team.active ? currentAssignmentWinProbability(assignment, currentTeamWinProbabilityById) : 0),
     );
     row.points = roundScore(row.points + (standing?.points ?? 0) * standingWeight);
     row.goalDifference = roundScore(row.goalDifference + (standing?.goalDifference ?? 0) * standingWeight);
@@ -256,6 +260,7 @@ function buildPlayerLeaderboard<
   return [...rowsByUserId.values()]
     .map((row) => ({
       ...row,
+      isEliminated: row.teams.length > 0 && row.activeTeamCount === 0,
       teams: row.teams.sort((left, right) => {
         const pickDifference = (left.pickNumber ?? Number.MAX_SAFE_INTEGER) - (right.pickNumber ?? Number.MAX_SAFE_INTEGER);
 
@@ -267,12 +272,12 @@ function buildPlayerLeaderboard<
       }),
     }))
     .sort((left, right) => {
-      if (left.points !== right.points) {
-        return right.points - left.points;
-      }
-
       if (left.normalizedWinProbability !== right.normalizedWinProbability) {
         return right.normalizedWinProbability - left.normalizedWinProbability;
+      }
+
+      if (left.points !== right.points) {
+        return right.points - left.points;
       }
 
       if (left.goalDifference !== right.goalDifference) {

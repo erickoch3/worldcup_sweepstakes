@@ -393,6 +393,12 @@ button {
   background: #ffffff;
 }
 
+.mini-match-card.live-mini-match-card {
+  background:
+    linear-gradient(90deg, rgb(15 118 110 / 0.12), transparent 42%),
+    #ffffff;
+}
+
 .mini-match-card div {
   display: grid;
   gap: 2px;
@@ -419,6 +425,30 @@ button {
   font-style: normal;
   font-weight: 800;
   text-align: right;
+}
+
+.mini-match-result {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+.mini-match-result b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 3px 8px;
+  background: #ffffff;
+  color: var(--navy);
+  font-size: 0.92rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.live-mini-match-card .mini-match-result em {
+  color: var(--accent-strong);
 }
 
 .favorite-list {
@@ -725,6 +755,24 @@ button {
 
 .leaderboard-table .rank-cell {
   color: var(--accent-strong);
+}
+
+.leaderboard-row-eliminated td {
+  color: var(--muted);
+}
+
+.leaderboard-table tbody tr.leaderboard-row-eliminated:first-child td {
+  background: transparent;
+}
+
+.leaderboard-row-eliminated .rank-cell {
+  color: var(--muted);
+}
+
+.leaderboard-row-eliminated .leaderboard-player-name {
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
 }
 
 .numeric-cell {
@@ -1452,6 +1500,10 @@ button {
   .mini-match-card time,
   .mini-match-card em {
     text-align: left;
+  }
+
+  .mini-match-result {
+    justify-items: start;
   }
 
   .odds-grid {

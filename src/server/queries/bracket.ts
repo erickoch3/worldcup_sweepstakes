@@ -8,6 +8,21 @@ const KNOCKOUT_SLOTS_BY_MATCH_NUMBER = new Map(
   WORLD_CUP_KNOCKOUT_SLOTS.map((slot) => [slot.matchNumber, slot]),
 );
 
+type KnockoutMatchRecord = {
+  id: string;
+  matchNumber: number | null;
+  stage: string;
+  status: string;
+  teamAScore: number | null;
+  teamBScore: number | null;
+  teamA: { countryCode: string; displayName: string };
+  teamB: { countryCode: string; displayName: string };
+  winnerTeam: { countryCode?: string; displayName: string } | null;
+  kickoffAt: Date;
+  teamAId: string;
+  teamBId: string;
+};
+
 export async function getBracketData(): Promise<BracketStageGroup[]> {
   const [matches, teamPlayerMap] = await Promise.all([
     prisma.match.findMany({
@@ -60,8 +75,8 @@ export async function getBracketData(): Promise<BracketStageGroup[]> {
         label: `Match ${slot.matchNumber}`,
         kickoff: slot.kickoffAt,
         venue: slot.venue,
-        teamA: toPlaceholderBracketTeam(slot.teamASlot),
-        teamB: toPlaceholderBracketTeam(slot.teamBSlot),
+        teamA: toSlotBracketTeam(slot.teamASlot, matches, teamPlayerMap),
+        teamB: toSlotBracketTeam(slot.teamBSlot, matches, teamPlayerMap),
         winner: null,
         status: 'SCHEDULED',
       },
@@ -86,20 +101,7 @@ export async function getBracketData(): Promise<BracketStageGroup[]> {
   }));
 }
 
-function toBracketMatch(match: {
-  id: string;
-  matchNumber: number | null;
-  stage: string;
-  status: string;
-  teamAScore: number | null;
-  teamBScore: number | null;
-  teamA: { countryCode: string; displayName: string };
-  teamB: { countryCode: string; displayName: string };
-  winnerTeam: { displayName: string } | null;
-  kickoffAt: Date;
-  teamAId: string;
-  teamBId: string;
-}, teamPlayerMap: Record<string, string[]>, slot?: KnockoutSlot): BracketMatch {
+function toBracketMatch(match: KnockoutMatchRecord, teamPlayerMap: Record<string, string[]>, slot?: KnockoutSlot): BracketMatch {
   const teamAName = match.teamA.displayName;
   const teamBName = match.teamB.displayName;
   const prefix = match.matchNumber === null ? match.stage : `Match ${match.matchNumber}`;
@@ -134,6 +136,97 @@ function toPlaceholderBracketTeam(slotLabel: string) {
     description: getSlotDescription(slotLabel),
     score: null,
   };
+}
+
+function toSlotBracketTeam(
+  slotLabel: string,
+  matches: KnockoutMatchRecord[],
+  teamPlayerMap: Record<string, string[]>,
+) {
+  const resolvedTeam = resolveSlotTeam(slotLabel, matches);
+
+  if (resolvedTeam === null) {
+    return toPlaceholderBracketTeam(slotLabel);
+  }
+
+  return {
+    name: resolvedTeam.displayName,
+    countryCode: resolvedTeam.countryCode,
+    score: null,
+    players: formatPlayerLabelForTeam(resolvedTeam.id, teamPlayerMap),
+  };
+}
+
+function resolveSlotTeam(
+  slotLabel: string,
+  matches: KnockoutMatchRecord[],
+): { id: string; countryCode: string; displayName: string } | null {
+  const winnerMatchNumber = matchSlotReference(slotLabel, 'Winner');
+
+  if (winnerMatchNumber !== null) {
+    const match = matches.find((candidate) => candidate.matchNumber === winnerMatchNumber);
+
+    return match === undefined ? null : winningTeam(match);
+  }
+
+  const runnerUpMatchNumber = matchSlotReference(slotLabel, 'Runner-up');
+
+  if (runnerUpMatchNumber !== null) {
+    const match = matches.find((candidate) => candidate.matchNumber === runnerUpMatchNumber);
+    const winner = match === undefined ? null : winningTeam(match);
+
+    if (match === undefined || winner === null) {
+      return null;
+    }
+
+    if (winner.id === match.teamAId) {
+      return {
+        id: match.teamBId,
+        countryCode: match.teamB.countryCode,
+        displayName: match.teamB.displayName,
+      };
+    }
+
+    if (winner.id === match.teamBId) {
+      return {
+        id: match.teamAId,
+        countryCode: match.teamA.countryCode,
+        displayName: match.teamA.displayName,
+      };
+    }
+  }
+
+  return null;
+}
+
+function winningTeam(match: KnockoutMatchRecord): { id: string; countryCode: string; displayName: string } | null {
+  if (match.winnerTeam === null) {
+    return null;
+  }
+
+  if (match.winnerTeam.displayName === match.teamA.displayName) {
+    return {
+      id: match.teamAId,
+      countryCode: match.teamA.countryCode,
+      displayName: match.teamA.displayName,
+    };
+  }
+
+  if (match.winnerTeam.displayName === match.teamB.displayName) {
+    return {
+      id: match.teamBId,
+      countryCode: match.teamB.countryCode,
+      displayName: match.teamB.displayName,
+    };
+  }
+
+  return null;
+}
+
+function matchSlotReference(slotLabel: string, prefix: 'Winner' | 'Runner-up'): number | null {
+  const match = new RegExp(`^${prefix} match (\\d+)$`, 'i').exec(slotLabel);
+
+  return match === null ? null : Number(match[1]);
 }
 
 function getSlotDescription(slotLabel: string): string | null {

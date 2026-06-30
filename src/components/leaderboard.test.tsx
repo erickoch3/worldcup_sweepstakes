@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { createElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { Leaderboard } from './leaderboard';
 
 describe('Leaderboard', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('shows team flags and total win probability without buy-in or draft odds columns', () => {
     render(
       createElement(Leaderboard, {
@@ -17,6 +21,7 @@ describe('Leaderboard', () => {
             teams: [{ countryCode: 'BRA', label: 'Brazil' }],
             points: 3,
             normalizedWinProbability: 0.375,
+            isEliminated: false,
           },
         ],
       }),
@@ -27,5 +32,24 @@ describe('Leaderboard', () => {
     expect(screen.queryByRole('columnheader', { name: 'Buy-in' })).toBeNull();
     expect(screen.getByLabelText('Brazil flag')).toBeTruthy();
     expect(screen.getByText('37.5%')).toBeTruthy();
+  });
+
+  it('marks fully eliminated players with the eliminated row style', () => {
+    render(
+      createElement(Leaderboard, {
+        rows: [
+          {
+            rank: 4,
+            player: 'Ada',
+            teams: [{ countryCode: 'BRA', label: 'Brazil' }],
+            points: 0,
+            normalizedWinProbability: 0,
+            isEliminated: true,
+          },
+        ],
+      }),
+    );
+
+    expect(screen.getByText('Ada').closest('tr')?.className).toContain('leaderboard-row-eliminated');
   });
 });

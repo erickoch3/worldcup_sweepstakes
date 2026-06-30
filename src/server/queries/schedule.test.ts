@@ -75,7 +75,41 @@ describe('getScheduleData', () => {
 
     expect(matchFindMany).toHaveBeenCalled();
     expect(assignmentFindMany).not.toHaveBeenCalled();
+    expect(data.matches).toContainEqual(expect.objectContaining({
+      id: 'match-73',
+      matchNumber: 73,
+      teamASlot: 'Group A runners-up',
+      teamBSlot: 'Group B runners-up',
+      kickoffAt: new Date('2026-06-28T19:00:00.000Z'),
+      stage: 'Round of 32',
+      status: MatchStatus.SCHEDULED,
+    }));
     expect(data.teamPlayerMap).toEqual({});
+  });
+
+  it('adds missing knockout slot placeholders without duplicating persisted knockout matches', async () => {
+    draftFindFirst.mockResolvedValue(null);
+    matchFindMany.mockResolvedValue([
+      {
+        id: 'persisted-73',
+        matchNumber: 73,
+        status: MatchStatus.FINAL,
+        kickoffAt: new Date('2026-06-28T19:00:00.000Z'),
+      },
+    ]);
+
+    const data = await getScheduleData(new Date('2026-06-30T12:00:00.000Z'));
+
+    expect(data.matches.filter((match) => match.matchNumber === 73)).toEqual([
+      expect.objectContaining({ id: 'persisted-73' }),
+    ]);
+    expect(data.matches).toContainEqual(expect.objectContaining({
+      id: 'match-77',
+      matchNumber: 77,
+      teamASlot: 'Group I winners',
+      teamBSlot: 'Group C/D/F/G/H third place',
+    }));
+    expect(data.nextScheduledMatchId).toBe('match-78');
   });
 });
 

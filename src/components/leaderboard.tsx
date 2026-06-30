@@ -9,6 +9,7 @@ export type LeaderboardRow = {
   }>;
   points: number;
   normalizedWinProbability: number;
+  isEliminated: boolean;
 };
 
 type LeaderboardProps = {
@@ -49,9 +50,11 @@ export function Leaderboard({ rows }: LeaderboardProps) {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={`${row.rank}-${row.player}`}>
+              <tr className={row.isEliminated ? 'leaderboard-row-eliminated' : undefined} key={`${row.rank}-${row.player}`}>
                 <td className="rank-cell">{row.rank}</td>
-                <td>{row.player}</td>
+                <td>
+                  <span className="leaderboard-player-name">{row.player}</span>
+                </td>
                 <td>
                   {row.teams.map((team, index) => (
                     <span key={`${team.countryCode ?? 'team'}-${team.label}`}>
