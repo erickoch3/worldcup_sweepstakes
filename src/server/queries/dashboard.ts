@@ -264,6 +264,10 @@ function buildPlayerLeaderboard<
       ...row,
       isEliminated: row.teams.length > 0 && row.activeTeamCount === 0,
       teams: row.teams.sort((left, right) => {
+        if (left.isEliminated !== right.isEliminated) {
+          return left.isEliminated ? 1 : -1;
+        }
+
         const pickDifference = (left.pickNumber ?? Number.MAX_SAFE_INTEGER) - (right.pickNumber ?? Number.MAX_SAFE_INTEGER);
 
         if (pickDifference !== 0) {

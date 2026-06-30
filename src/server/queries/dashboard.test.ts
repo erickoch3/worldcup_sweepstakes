@@ -475,7 +475,7 @@ describe('getDashboardData', () => {
         userId: 'user-mixed',
         userName: 'Mixed Player',
         teamId: 'team-active',
-        teamName: 'Active',
+        teamName: 'Zed Active',
         countryCode: 'ACT',
         buyInPence: 500,
         normalizedWinProbability: 0.25,
@@ -484,7 +484,7 @@ describe('getDashboardData', () => {
         userId: 'user-mixed',
         userName: 'Mixed Player',
         teamId: 'team-inactive',
-        teamName: 'Inactive',
+        teamName: 'Alpha Inactive',
         countryCode: 'INA',
         buyInPence: 500,
         normalizedWinProbability: 0.75,
@@ -507,8 +507,8 @@ describe('getDashboardData', () => {
         isEliminated: team.isEliminated,
       })),
     ).toEqual([
-      { countryCode: 'ACT', label: 'Active', isEliminated: false },
-      { countryCode: 'INA', label: 'Inactive', isEliminated: true },
+      { countryCode: 'ACT', label: 'Zed Active', isEliminated: false },
+      { countryCode: 'INA', label: 'Alpha Inactive', isEliminated: true },
     ]);
   });
 
