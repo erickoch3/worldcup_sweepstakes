@@ -5,6 +5,7 @@ export type LeaderboardRow = {
   player: string;
   teams: Array<{
     countryCode?: string | null;
+    isEliminated: boolean;
     label: string;
   }>;
   points: number;
@@ -58,8 +59,12 @@ export function Leaderboard({ rows }: LeaderboardProps) {
                 <td>
                   {row.teams.map((team, index) => (
                     <span key={`${team.countryCode ?? 'team'}-${team.label}`}>
-                      {index > 0 ? ', ' : null}
-                      <TeamNameWithFlag countryCode={team.countryCode} name={team.label} />
+                      {index > 0 ? <span className="leaderboard-team-separator">, </span> : null}
+                      <span
+                        className={team.isEliminated ? 'leaderboard-team leaderboard-team-eliminated' : 'leaderboard-team'}
+                      >
+                        <TeamNameWithFlag countryCode={team.countryCode} name={team.label} />
+                      </span>
                     </span>
                   ))}
                 </td>

@@ -465,6 +465,53 @@ describe('getDashboardData', () => {
     ]);
   });
 
+  it('marks individual leaderboard teams eliminated when only some assigned teams are inactive', async () => {
+    draftFindFirst.mockResolvedValue({ id: 'draft-1' });
+    teamFindMany.mockResolvedValue([
+      { id: 'team-active', countryCode: 'ACT', displayName: 'Active', groupName: 'Group A', decimalOdds: 2 },
+    ]);
+    assignmentFindMany.mockResolvedValue([
+      assignmentFixture({
+        userId: 'user-mixed',
+        userName: 'Mixed Player',
+        teamId: 'team-active',
+        teamName: 'Active',
+        countryCode: 'ACT',
+        buyInPence: 500,
+        normalizedWinProbability: 0.25,
+      }),
+      assignmentFixture({
+        userId: 'user-mixed',
+        userName: 'Mixed Player',
+        teamId: 'team-inactive',
+        teamName: 'Inactive',
+        countryCode: 'INA',
+        buyInPence: 500,
+        normalizedWinProbability: 0.75,
+        teamActive: false,
+      }),
+    ]);
+
+    const data = await getDashboardData();
+
+    expect(data.leaderboard).toHaveLength(1);
+    expect(data.leaderboard[0]).toMatchObject({
+      userId: 'user-mixed',
+      isEliminated: false,
+      normalizedWinProbability: 1,
+    });
+    expect(
+      data.leaderboard[0]?.teams.map((team) => ({
+        countryCode: team.countryCode,
+        label: team.label,
+        isEliminated: team.isEliminated,
+      })),
+    ).toEqual([
+      { countryCode: 'ACT', label: 'Active', isEliminated: false },
+      { countryCode: 'INA', label: 'Inactive', isEliminated: true },
+    ]);
+  });
+
   it('ignores matches against unrepresented countries when computing standings', async () => {
     matchFindMany.mockResolvedValue([
       {

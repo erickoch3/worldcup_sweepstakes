@@ -207,6 +207,7 @@ function buildPlayerLeaderboard<
       teams: Array<{
         id: string;
         countryCode: string;
+        isEliminated: boolean;
         label: string;
         pickNumber: number | null;
         shareCount: number;
@@ -246,6 +247,7 @@ function buildPlayerLeaderboard<
     row.teams.push({
       id: assignment.team.id,
       countryCode: assignment.team.countryCode,
+      isEliminated: !assignment.team.active,
       label:
         shareCount > 1
           ? `${assignment.team.displayName} (share ${assignment.teamShareIndex}/${shareCount})`

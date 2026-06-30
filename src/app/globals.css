@@ -775,6 +775,19 @@ button {
   text-decoration-thickness: 2px;
 }
 
+.leaderboard-team-eliminated {
+  color: var(--muted);
+  opacity: 0.62;
+  text-decoration: line-through;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
+
+.leaderboard-team-eliminated [role='img'] {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
 .numeric-cell {
   text-align: right;
   white-space: nowrap;

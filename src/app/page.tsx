@@ -23,6 +23,7 @@ export default async function HomePage() {
     player: row.playerName ?? row.playerEmail ?? 'Unknown participant',
     teams: row.teams.map((team) => ({
       countryCode: team.countryCode,
+      isEliminated: team.isEliminated,
       label: team.label,
     })),
     points: row.points,
